@@ -19,10 +19,10 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px;borde
 .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}.toolbar button,.toolbar select{padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer}.toolbar button.on{background:var(--ink);color:#fff}
 canvas{background:#fff;border:1px solid var(--line);border-radius:14px;padding:8px}
 footer{color:var(--mut);font-size:12px;text-align:center;padding:18px}.live{width:8px;height:8px;border-radius:99px;background:var(--ok);display:inline-block;animation:pl 2s infinite}@keyframes pl{50%{opacity:.3}}
-section{display:none}section.on{display:block}
+section{display:block}
 </style></head><body>
 <header><div class="logo">W</div><div><b>Wifi Ranger</b><div style="font-size:12px;color:#94a3b8">AI Wi-Fi Health Monitor · <span class="live"></span> live</div></div>
-<nav><button data-t="ov" class="on">Overview</button><button data-t="ai">AI Analysis</button><button data-t="hi">History</button></nav></header>
+<nav><button onclick="document.getElementById('ov').scrollIntoView({behavior:'smooth'})">Overview</button><button onclick="document.getElementById('ai').scrollIntoView({behavior:'smooth'})">AI Analysis</button><button onclick="document.getElementById('hi').scrollIntoView({behavior:'smooth'})">History</button></nav></header>
 <main>
 <section id="ov" class="on">
 <div class="grid" style="margin-top:12px">
@@ -43,7 +43,6 @@ section{display:none}section.on{display:block}
 const API=(location.protocol.startsWith("http")&&location.hostname?"http://"+location.hostname+":8000":"http://127.0.0.1:8000");
 document.getElementById("api").textContent=API;
 let H=1,chart;const $=id=>document.getElementById(id);
-document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav button").forEach(x=>x.classList.remove("on"));b.classList.add("on");document.querySelectorAll("section").forEach(s=>s.classList.remove("on"));document.getElementById(b.dataset.t).classList.add("on");});
 document.querySelectorAll("[data-h]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-h]").forEach(x=>x.classList.remove("on"));b.classList.add("on");H=+b.dataset.h;hist();});
 async function j(u){const r=await fetch(u);return r.json();}
 const f1=v=>v==null?"–":(+v).toFixed(v>100?0:1);
