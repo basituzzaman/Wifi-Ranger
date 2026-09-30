@@ -1,40 +1,74 @@
-<!doctype html><html><head><meta charset="utf-8"><title>Wi-Fi Health Monitor</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wifi Ranger — AI Wi-Fi Health Monitor</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>body{font-family:Arial;margin:16px;background:#0f172a;color:#e2e8f0}.card{background:#1e293b;padding:12px;border-radius:10px;margin:8px;min-width:180px}.row{display:flex;flex-wrap:wrap}.badge{font-size:22px;padding:6px 14px;border-radius:20px}.Normal{background:#16a34a}.Degraded{background:#f59e0b}.Severe{background:#dc2626}canvas{background:#fff;border-radius:10px}button{margin:4px}</style></head><body>
-<h2>AI Wi-Fi Health Monitor</h2>
-<div class="row"><div class="card"><div>Status <span id="badge" class="badge Normal">Normal</span></div><div id="cause"></div><div id="score"></div><ul id="ev"></ul></div>
-<div class="card">RSSI<div id="rssi">-</div></div><div class="card">Ping<div id="ping">-</div></div><div class="card">Loss<div id="loss">-</div></div><div class="card">DNS<div id="dns">-</div></div></div>
-<div><button onclick="setH(1)">1h</button><button onclick="setH(6)">6h</button><button onclick="setH(24)">24h</button><span id="lbl"></span></div>
-<canvas id="ch" height="120"></canvas>
-<h3>Anomalies</h3><ul id="anom"></ul>
+<style>
+:root{--bg:#f1f5f9;--card:#fff;--ink:#0f172a;--mut:#64748b;--line:#e2e8f0;--ok:#16a34a;--warn:#d97706;--bad:#dc2626;--acc:#2563eb}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--ink);color:#fff;padding:14px 22px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:5}
+.logo{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#22d3ee,#2563eb);display:flex;align-items:center;justify-content:center;font-weight:800}
+nav{display:flex;gap:8px;margin-left:auto}nav button{background:#1e293b;color:#cbd5e1;border:0;padding:8px 14px;border-radius:8px;cursor:pointer}nav button.on{background:#fff;color:var(--ink)}
+main{max-width:1180px;margin:0 auto;padding:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.k{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}.v{font-size:26px;font-weight:700;margin-top:4px}.s{font-size:12px;color:var(--mut)}
+.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:12px;margin:12px 0}@media(max-width:800px){.hero{grid-template-columns:1fr}}
+.badge{display:inline-block;padding:6px 16px;border-radius:999px;color:#fff;font-weight:700}.Normal{background:var(--ok)}.Degraded{background:var(--warn)}.Severe{background:var(--bad)}
+.scorebar{height:10px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin:8px 0}.scorebar>i{display:block;height:100%;background:linear-gradient(90deg,#22c55e,#f59e0b,#ef4444)}
+.ev{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.ev span{background:#fef3c7;border:1px solid #fcd34d;padding:4px 10px;border-radius:99px;font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--mut);font-weight:600}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}.toolbar button,.toolbar select{padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer}.toolbar button.on{background:var(--ink);color:#fff}
+canvas{background:#fff;border:1px solid var(--line);border-radius:14px;padding:8px}
+footer{color:var(--mut);font-size:12px;text-align:center;padding:18px}.live{width:8px;height:8px;border-radius:99px;background:var(--ok);display:inline-block;animation:pl 2s infinite}@keyframes pl{50%{opacity:.3}}
+section{display:none}section.on{display:block}
+</style></head><body>
+<header><div class="logo">W</div><div><b>Wifi Ranger</b><div style="font-size:12px;color:#94a3b8">AI Wi-Fi Health Monitor · <span class="live"></span> live</div></div>
+<nav><button data-t="ov" class="on">Overview</button><button data-t="ai">AI Analysis</button><button data-t="hi">History</button></nav></header>
+<main>
+<section id="ov" class="on">
+<div class="grid" style="margin-top:12px">
+<div class="card"><div class="k">RSSI</div><div class="v" id="rssi">–</div><div class="s" id="rssiS">dBm · good &gt; -65</div></div>
+<div class="card"><div class="k">Ping</div><div class="v" id="ping">–</div><div class="s">ms to 8.8.8.8</div></div>
+<div class="card"><div class="k">Jitter</div><div class="v" id="jit">–</div><div class="s">ms variation</div></div>
+<div class="card"><div class="k">Loss</div><div class="v" id="loss">–</div><div class="s">% failed</div></div>
+<div class="card"><div class="k">DNS</div><div class="v" id="dns">–</div><div class="s">ms lookup</div></div>
+<div class="card"><div class="k">Speed</div><div class="v" id="spd">–</div><div class="s">Mbps down</div></div>
+</div>
+<div class="hero"><div class="card"><div class="k">System status</div><h2 style="margin:6px 0"><span id="badge" class="badge Normal">Normal</span></h2><div id="cause" class="s">–</div><div class="scorebar"><i id="bar" style="width:10%"></i></div><div class="s" id="score">score –</div><div class="ev" id="ev"></div></div>
+<div class="card"><div class="k">Probes</div><div class="toolbar"><select id="probe"><option value="">all</option><option value="esp32-1">esp32-1</option><option value="pc">pc</option></select><span class="s" id="cnt"></span></div><div class="s">Backend <span id="api"></span> · refresh 4s</div><div class="s" id="lbl"></div></div></div>
+</section>
+<section id="ai"><div class="card" style="margin-top:12px"><h3 style="margin:0">AI Analysis</h3><div class="s">IsolationForest score + RandomForest cause (5 classes). Confidence &lt;50% → Unknown.</div><div class="grid" style="margin-top:10px"><div class="card"><div class="k">Score</div><div class="v" id="aScore">–</div></div><div class="card"><div class="k">Cause</div><div class="v" id="aCause" style="font-size:20px">–</div></div><div class="card"><div class="k">Confidence</div><div class="v" id="aConf">–</div></div></div><h4>Evidence</h4><div class="ev" id="aEv"></div><h4>Recent anomalies</h4><table><thead><tr><th>Time</th><th>Probe</th><th>Status</th><th>Cause</th><th>Score</th></tr></thead><tbody id="anom"></tbody></table></div></section>
+<section id="hi"><div class="toolbar" style="margin-top:12px"><button data-h="1" class="on">1h</button><button data-h="6">6h</button><button data-h="24">24h</button><button data-h="168">7d</button><select id="metric"><option value="ping_ms">ping</option><option value="dns_ms">dns</option><option value="loss_pct">loss</option><option value="rssi">rssi</option></select></div><canvas id="ch" height="110"></canvas></section>
+</main><footer>Wifi Ranger · ESP32 + PC probes · FastAPI + SQLite · IsolationForest + RandomForest · <span id="ft"></span></footer>
 <script>
-let H=1, chart;
-const API=(location.protocol.startsWith("http")&&location.hostname? "http://"+location.hostname+":8000" : "http://127.0.0.1:8000");
+const API=(location.protocol.startsWith("http")&&location.hostname?"http://"+location.hostname+":8000":"http://127.0.0.1:8000");
+document.getElementById("api").textContent=API;
+let H=1,chart;const $=id=>document.getElementById(id);
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav button").forEach(x=>x.classList.remove("on"));b.classList.add("on");document.querySelectorAll("section").forEach(s=>s.classList.remove("on"));document.getElementById(b.dataset.t).classList.add("on");});
+document.querySelectorAll("[data-h]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-h]").forEach(x=>x.classList.remove("on"));b.classList.add("on");H=+b.dataset.h;hist();});
 async function j(u){const r=await fetch(u);return r.json();}
-async function tick(){
- try{
-  const l=await j(API+"/latest");
-  document.getElementById("rssi").textContent=l.rssi??"-";
-  document.getElementById("ping").textContent=l.ping_ms??"-";
-  document.getElementById("loss").textContent=l.loss_pct??"-";
-  document.getElementById("dns").textContent=l.dns_ms??"-";
-  const a=await j(API+"/analysis/latest");
-  if(a.status){const b=document.getElementById("badge");b.textContent=a.status;b.className="badge "+a.status;
-   document.getElementById("cause").textContent="Cause: "+(a.cause||"")+" ("+((a.confidence||0)*100).toFixed(0)+"%)";
-   document.getElementById("score").textContent="Score: "+(a.score??"");
-   document.getElementById("ev").innerHTML=(JSON.parse(a.evidence||"[]")).map(e=>"<li>"+e+"</li>").join("");}
-  const an=await j(API+"/anomalies?hours="+H);
-  document.getElementById("anom").innerHTML=an.slice(0,20).map(x=>"<li>"+new Date(x.ts*1000).toLocaleTimeString()+" "+x.probe_id+" "+x.status+" "+x.cause+" "+x.score+"</li>").join("");
- }catch(e){}
-}
-async function hist(){
- try{
-  const h=await j(API+"/history?hours="+H);
-  document.getElementById("lbl").textContent=" rows "+h.length;
-  const d=h.slice(-300);
-  const data={labels:d.map(r=>new Date(r.ts*1000).toLocaleTimeString()),datasets:[{label:"ping",data:d.map(r=>r.ping_ms),borderColor:"red",pointRadius:0},{label:"dns",data:d.map(r=>r.dns_ms),borderColor:"blue",pointRadius:0}]};
-  if(chart)chart.destroy();chart=new Chart(document.getElementById("ch"),{type:"line",data,options:{animation:false}});}catch(e){}
-}
-function setH(h){H=h;hist();}
+const f1=v=>v==null?"–":(+v).toFixed(v>100?0:1);
+async function tick(){try{
+ const p=$("probe").value, q=p?"?probe_id="+p:"";
+ const l=await j(API+"/latest"+q);
+ $("rssi").textContent=f1(l.rssi);$("ping").textContent=f1(l.ping_ms);$("jit").textContent=f1(l.jitter_ms);$("loss").textContent=f1(l.loss_pct);$("dns").textContent=l.dns_ms==null?"timeout":f1(l.dns_ms);$("spd").textContent=f1(l.down_mbps);
+ const a=await j(API+"/analysis/latest"+q);
+ if(a.status){const b=$("badge");b.textContent=a.status;b.className="badge "+a.status;
+  $("cause").textContent="Possible cause: "+(a.cause||"—")+" · conf "+((a.confidence||0)*100).toFixed(0)+"% · "+(a.probe_id||"");
+  $("score").textContent="anomaly score "+(a.score??"—")+" (thr 0.62)";$("bar").style.width=Math.min(100,(a.score||0)*100)+"%";
+  const ev=JSON.parse(a.evidence||"[]");$("ev").innerHTML=ev.map(e=>"<span>"+e+"</span>").join("")||'<span class="s">no deviation</span>';
+  $("aScore").textContent=a.score??"—";$("aCause").textContent=(a.cause||"—")+" · "+a.status;$("aConf").textContent=((a.confidence||0)*100).toFixed(0)+"%";$("aEv").innerHTML=$("ev").innerHTML;}
+ const an=await j(API+"/anomalies?hours="+H);
+ $("anom").innerHTML=an.slice(0,25).map(x=>"<tr><td>"+new Date(x.ts*1000).toLocaleString()+"</td><td>"+x.probe_id+"</td><td>"+x.status+"</td><td>"+x.cause+"</td><td>"+x.score+"</td></tr>").join("");
+ $("ft").textContent="updated "+new Date().toLocaleTimeString();
+}catch(e){}}
+async function hist(){try{
+ const m=$("metric").value;
+ const h=await j(API+"/history?hours="+H);
+ $("lbl").textContent=h.length+" rows · "+H+"h";$("cnt").textContent=h.length+" rows";
+ const d=h.filter(r=>!$("probe").value||r.probe_id===$("probe").value).slice(-400);
+ const data={labels:d.map(r=>new Date(r.ts*1000).toLocaleTimeString()),datasets:[{label:m,data:d.map(r=>r[m]),borderColor:"#2563eb",pointRadius:0,tension:.2}]};
+ if(chart)chart.destroy();chart=new Chart($("ch"),{type:"line",data,options:{animation:false,scales:{y:{title:{display:true,text:m}}}}});
+}catch(e){}}
+$("probe").onchange=()=>{tick();hist();};$("metric").onchange=hist;
 setInterval(tick,4000);setInterval(hist,15000);tick();hist();
 </script></body></html>
