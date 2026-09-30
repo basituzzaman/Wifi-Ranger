@@ -1,0 +1,5 @@
+start,end,fault,comment
+2026-09-30 11:43,11:58,WIFI_WEAK,far bedroom powerbank run1
+2026-09-30 12:42,13:02,CONGESTION,2x4K+1GB buffering run1
+2026-09-30 13:16,13:30,PACKET_LOSS,clumsy-10pct-pc run1
+2026-09-30 13:45,14:03,DNS_PROBLEM,dead-192.0.2.1-pc run1
