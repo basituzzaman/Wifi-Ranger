@@ -146,8 +146,3 @@ docs/screenshot.png    dashboard screenshot (this file)
 * PC-only mode is blind to `WIFI_WEAK` (needs ESP32 RSSI); ESP32 is 2.4 GHz only.
 * Faults are artificial (Clumsy, dead DNS, far-room, streaming load).
 * No auth on API; LAN-only use. `data/*.db`, `.venv/`, `ml/*.png` stay gitignored.
-
-## Saving the screenshot
-
-The image at the top loads from `docs/screenshot.png`.
-To reproduce: save the dashboard screenshot from this chat as `docs/screenshot.png` and commit.
