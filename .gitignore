@@ -9,6 +9,6 @@ ml/*.joblib
 !ml/rf.joblib
 !ml/labels.joblib
 ml/*.csv
-!ml/dataset_clean_sample.csv
+!ml/dataset_clean.csv
 ml/*.png
 .DS_Store
