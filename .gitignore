@@ -4,6 +4,11 @@ __pycache__/
 data/monitor.db
 data/*.db
 ml/*.joblib
+!ml/scaler.joblib
+!ml/isoforest.joblib
+!ml/rf.joblib
+!ml/labels.joblib
 ml/*.csv
+!ml/dataset_clean_sample.csv
 ml/*.png
 .DS_Store
